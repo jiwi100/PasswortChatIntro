@@ -110,5 +110,15 @@ body.background {
     /* neue Zeile: Farbfilter */
     filter: grayscale(80%) brightness(85%);
 }
+#overlay {
+    width: 100%;
+    height: 100vh;
+    background-color: rgba(255, 255, 255, 0.85); /* statt 0.7 wie vorher */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-sizing: border-box;
+    padding: 40px;
+}
 
 
