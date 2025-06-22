@@ -107,6 +107,4 @@ body.background {
     min-height: 100vh;
     margin: 0;
     padding: 0;
-    /* neue Zeile: Farbfilter */
-    filter: grayscale(80%) brightness(85%);
 }
