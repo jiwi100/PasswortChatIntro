@@ -100,7 +100,7 @@ body {
 }
 
 body.background {
-    background-image: url('backgroundbild.jpg'); /* ersetze durch deine Bilddatei, z. B. .png */
+    background-image: url('backgroundbild.png'); /* ersetze durch deine Bilddatei, z. B. .png */
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
