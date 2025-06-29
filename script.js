@@ -2,6 +2,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const chatLog = document.getElementById('chat-log');
     const optionsArea = document.getElementById('options-area');
     let currentNodeId = 'start';
+    let userLevel = 'mittel'; // Standard-Level
 
     function displayNode(nodeId) {
         const node = dialogueTree[nodeId];
@@ -33,6 +34,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 button.classList.add('option-button');
                 button.textContent = option.text;
                 button.addEventListener('click', () => {
+                    // Bei Level-Auswahl merken
+                    if (option.level) {
+                        userLevel = option.level;
+                    }
                     currentNodeId = option.nextNodeId;
                     displayNode(currentNodeId);
                 });
@@ -44,81 +49,211 @@ document.addEventListener('DOMContentLoaded', () => {
     const dialogueTree = {
         start: {
             speaker: "Alex",
-            text: "Hey! Ich bin Alex. Bereit für einen kurzen Check zur Passwort-Hygiene? Geht ganz schnell – versprochen.",
+            text: "Hey! Ich bin Alex, dein Passwort-Coach. Lass uns in 2 Minuten deine Passwort-Sicherheit checken!<br><br>Zuerst: Wie würdest du dein technisches Wissen einschätzen?",
             options: [
-                { text: "Klar, leg los!", nextNodeId: "frage_pw_merkmal" },
-                { text: "Worum geht’s da genau?", nextNodeId: "erklärung_pw_hygiene" }
+                { text: "1: Ich bin Anfänger", nextNodeId: "level_confirmed", level: "tief" },
+                { text: "2: Solides Grundwissen", nextNodeId: "level_confirmed", level: "mittel" },
+                { text: "3: Ich kenne mich gut aus", nextNodeId: "level_confirmed", level: "hoch" }
             ]
         },
-        erklärung_pw_hygiene: {
+        level_confirmed: {
             speaker: "Alex",
-            text: "Passwort-Hygiene meint: starke, einzigartige Passwörter – idealerweise in einem Passwortmanager gespeichert. Verhindert, dass bei einem Datenleck gleich alles offenliegt.",
+            text: "Super! Dann legen wir los 🚀",
             options: [
-                { text: "Okay, klingt sinnvoll.", nextNodeId: "frage_pw_merkmal" }
+                { text: "Let's go!", nextNodeId: "frage_pw_staerke" }
             ]
         },
-        frage_pw_merkmal: {
+        frage_pw_staerke: {
             speaker: "Alex",
-            text: "Was ist ein Merkmal eines sicheren Passworts?",
-            options: [
-                { text: "Mind. 12 Zeichen, Gross-/Kleinschreibung, Sonderzeichen", nextNodeId: "antwort_richtig_1" },
-                { text: "Geburtsdatum oder Name", nextNodeId: "antwort_falsch_1" }
-            ]
+            text: function() {
+                if (userLevel === 'tief') {
+                    return "Was macht ein Passwort stark? (Tipp: Je länger und zufälliger, desto besser!)";
+                } else if (userLevel === 'hoch') {
+                    return "Quick Check: Welche Aussage über sichere Passwörter ist korrekt?";
+                } else {
+                    return "Was ist das wichtigste Merkmal eines starken Passworts?";
+                }
+            }(),
+            options: function() {
+                if (userLevel === 'hoch') {
+                    return [
+                        { text: "Mindestens 12 Zeichen, keine Wörterbuch-Attacken möglich", nextNodeId: "antwort_richtig_1" },
+                        { text: "Monatlicher Wechsel ist Pflicht", nextNodeId: "antwort_falsch_1" }
+                    ];
+                } else {
+                    return [
+                        { text: "Mind. 12 Zeichen mit Mix aus Buchstaben/Zahlen/Sonderzeichen", nextNodeId: "antwort_richtig_1" },
+                        { text: "Mein Geburtsdatum + Name", nextNodeId: "antwort_falsch_1" }
+                    ];
+                }
+            }()
         },
         antwort_richtig_1: {
             speaker: "Alex",
-            text: "Yes! Genau das macht Passwörter schwer zu knacken.",
-            options: [ { text: "Nächste Frage", nextNodeId: "frage_pw_manager" } ]
+            text: "Genau! 💪 Lange, zufällige Passwörter sind der Schlüssel",
+            options: [ { text: "Weiter", nextNodeId: "frage_pw_sharing" } ]
         },
         antwort_falsch_1: {
             speaker: "Alex",
-            text: "Leider nein – persönliche Daten sind leicht erratbar. Besser sind komplexe, zufällige Kombinationen.",
-            options: [ { text: "Okay, weiter!", nextNodeId: "frage_pw_manager" } ]
+            text: function() {
+                if (userLevel === 'tief') {
+                    return "Nicht ganz. Persönliche Infos sind tabu! Besser: Lange, zufällige Kombinationen.";
+                } else {
+                    return "Nope! Regelmässige Wechsel ohne Grund schwächen sogar die Sicherheit.";
+                }
+            }(),
+            options: [ { text: "Verstanden", nextNodeId: "frage_pw_sharing" } ]
         },
-        frage_pw_manager: {
+        frage_pw_sharing: {
             speaker: "Alex",
-            text: "Wie speicherst du deine Passwörter idealerweise?",
+            text: function() {
+                if (userLevel === 'tief') {
+                    return "Dein Kollege braucht kurz dein Passwort. Was machst du?";
+                } else if (userLevel === 'hoch') {
+                    return "Szenario: Shared Account für Social Media im Team. Sicherheitstechnisch okay?";
+                } else {
+                    return "Ist es okay, Passwörter mit vertrauten Personen zu teilen?";
+                }
+            }(),
             options: [
-                { text: "In einem Passwortmanager", nextNodeId: "antwort_richtig_2" },
-                { text: "In einer Notiz-App oder im Browser", nextNodeId: "antwort_falsch_2" }
+                { text: userLevel === 'hoch' ? "Nein, Audit-Trail geht verloren" : "Niemals teilen!", nextNodeId: "antwort_richtig_2" },
+                { text: userLevel === 'hoch' ? "Mit MFA ist es vertretbar" : "Klar, wenn ich der Person vertraue", nextNodeId: "antwort_falsch_2" }
             ]
         },
         antwort_richtig_2: {
             speaker: "Alex",
-            text: "Sehr gut! Passwortmanager helfen, starke und unterschiedliche Passwörter zu verwalten.",
-            options: [ { text: "Letzte Frage", nextNodeId: "frage_einzigartigkeit" } ]
+            text: "Perfekt! 🎯 Passwörter sind wie Zahnbürsten: Teilen wir lieber nicht :)",
+            options: [ { text: "Check!", nextNodeId: "frage_pw_reuse" } ]
         },
         antwort_falsch_2: {
             speaker: "Alex",
-            text: "Notiz-Apps oder Browser sind nicht optimal. Ein Passwortmanager ist sicherer und speichert alles verschlüsselt.",
-            options: [ { text: "Letzte Frage", nextNodeId: "frage_einzigartigkeit" } ]
+            text: function() {
+                if (userLevel === 'hoch') {
+                    return "Auch mit MFA bleibt das Accountability-Problem. Besser: Separate Accounts mit Rollen-Management.";
+                } else {
+                    return "Gefährlich! Geteilte Passwörter = geteiltes Risiko. Immer eigene Zugänge nutzen.";
+                }
+            }(),
+            options: [ { text: "Macht Sinn", nextNodeId: "frage_pw_reuse" } ]
         },
-        frage_einzigartigkeit: {
+        frage_pw_reuse: {
             speaker: "Alex",
-            text: "Warum sollte jedes Konto ein eigenes Passwort haben?",
-            options: [
-                { text: "Damit ein Leck nicht alle Konten betrifft", nextNodeId: "antwort_richtig_3" },
-                { text: "Weil es einfacher zu merken ist", nextNodeId: "antwort_falsch_3" }
-            ]
+            text: function() {
+                if (userLevel === 'tief') {
+                    return "Du nutzt das gleiche Passwort für E-Mail und Shopping. Problem?";
+                } else if (userLevel === 'hoch') {
+                    return "Credential Stuffing Attacks, deine Gegenstrategie?";
+                } else {
+                    return "Warum ist es riskant, dasselbe Passwort mehrfach zu verwenden?";
+                }
+            }(),
+            options: function() {
+                if (userLevel === 'hoch') {
+                    return [
+                        { text: "Unique passwords + haveibeenpwned Monitoring", nextNodeId: "antwort_richtig_3" },
+                        { text: "Starke Passwörter reichen aus", nextNodeId: "antwort_falsch_3" }
+                    ];
+                } else {
+                    return [
+                        { text: "Ein Hack = alle Konten in Gefahr", nextNodeId: "antwort_richtig_3" },
+                        { text: "Kein Problem, wenn es stark ist", nextNodeId: "antwort_falsch_3" }
+                    ];
+                }
+            }()
         },
         antwort_richtig_3: {
             speaker: "Alex",
-            text: "Exakt! So bleibt der Schaden begrenzt, falls ein Passwort kompromittiert wird.",
-            options: [ { text: "Danke Alex, war hilfreich!", nextNodeId: "final_goodbye" } ]
+            text: "Spot on! 🛡️ Ein Passwort pro Konto ist Pflicht!",
+            options: [ { text: "Klar!", nextNodeId: "frage_pw_manager" } ]
         },
         antwort_falsch_3: {
             speaker: "Alex",
-            text: "Leider falsch. Gleiches Passwort = gleich hohes Risiko überall. Deshalb: einzigartig pro Konto!",
-            options: [ { text: "Danke, ich hab was gelernt!", nextNodeId: "final_goodbye" } ]
+            text: "Leider nein. Auch das stärkste Passwort hilft nicht, wenn es geleakt wird!",
+            options: [ { text: "Stimmt", nextNodeId: "frage_pw_manager" } ]
+        },
+        frage_pw_manager: {
+            speaker: "Alex",
+            text: function() {
+                if (userLevel === 'tief') {
+                    return "Passwortmanager sind Apps, die alle deine Passwörter sicher speichern. Nutzt du sowas?";
+                } else if (userLevel === 'hoch') {
+                    return "Browser-integriert vs. Standalone Passwortmanager: Deine Präferenz?";
+                } else {
+                    return "Wie verwaltest du deine vielen verschiedenen Passwörter am besten?";
+                }
+            }(),
+            options: function() {
+                if (userLevel === 'hoch') {
+                    return [
+                        { text: "Standalone mit Zero-Knowledge-Architektur", nextNodeId: "antwort_richtig_4" },
+                        { text: "Browser reicht für die meisten Fälle", nextNodeId: "antwort_ok_4" }
+                    ];
+                } else if (userLevel === 'tief') {
+                    return [
+                        { text: "Ja, nutze ich / will ich nutzen", nextNodeId: "antwort_richtig_4" },
+                        { text: "Nein, ich merke sie mir", nextNodeId: "antwort_falsch_4" }
+                    ];
+                } else {
+                    return [
+                        { text: "Mit einem Passwortmanager", nextNodeId: "antwort_richtig_4" },
+                        { text: "Ich nutze Variationen eines Passworts", nextNodeId: "antwort_falsch_4" }
+                    ];
+                }
+            }()
+        },
+        antwort_richtig_4: {
+            speaker: "Alex",
+            text: "Top! 🏆 Passwortmanager sind der beste Weg zu sicheren, einzigartigen Passwörtern.",
+            options: [ { text: "Cool!", nextNodeId: "quick_tip" } ]
+        },
+        antwort_ok_4: {
+            speaker: "Alex",
+            text: "Browser-Speicherung ist okay, aber dedizierte Manager bieten mehr Sicherheit & Features.",
+            options: [ { text: "Gut zu wissen", nextNodeId: "quick_tip" } ]
+        },
+        antwort_falsch_4: {
+            speaker: "Alex",
+            text: function() {
+                if (userLevel === 'tief') {
+                    return "Das wird schnell unübersichtlich! Ein Passwortmanager nimmt dir die Arbeit ab.";
+                } else {
+                    return "Variationen sind leicht zu knacken! Zeit für einen Passwortmanager (z.B. KeePass / iCloud Schlüsselbund).";
+                }
+            }(),
+            options: [ { text: "Überzeugend", nextNodeId: "quick_tip" } ]
+        },
+        quick_tip: {
+            speaker: "Alex",
+            text: function() {
+                if (userLevel === 'tief') {
+                    return "💡 Quick-Tipp: Probier die '3-Wörter-Methode': Apfel-Rakete-Tanz = sicher & merkbar!<br><br>Und check mal haveibeenpwned.com: Zeigt dir, ob deine E-Mail in Datenlecks war.";
+                } else if (userLevel === 'hoch') {
+                    return "💡 Pro-Tipp: Aktiviere Breach-Monitoring in deinem Passwortmanager und nutze Hardware-Keys für kritische Accounts. Standardpasswörter bei IoT-Geräten nicht vergessen!";
+                } else {
+                    return "💡 Merke: Lange Passphrasen > komplizierte Passwörter. Und haveibeenpwned.com zeigt dir, ob deine Daten geleakt wurden!";
+                }
+            }(),
+            options: [ { text: "Danke für die Tipps!", nextNodeId: "final_summary" } ]
+        },
+        final_summary: {
+            speaker: "Alex",
+            text: function() {
+                const base = "🎉 Geschafft! In 2 Minuten hast du die wichtigsten Passwort-Regeln gelernt:<br><br>✅ 12+ Zeichen<br>✅ Nie teilen<br>✅ Jedes Konto = eigenes Passwort<br>✅ Passwortmanager nutzen";
+                if (userLevel === 'hoch') {
+                    return base + "<br>✅ Zero-Knowledge-Verschlüsselung<br>✅ Breach-Monitoring aktiv";
+                }
+                return base;
+            }(),
+            options: [ { text: "Auf zu sicheren Passwörtern! 🚀", nextNodeId: "final_goodbye" } ]
         },
         final_goodbye: {
             speaker: "System",
-            text: "Der Chat ist beendet. Du kannst jetzt zum Kurs übergehen.",
+            text: "Chat beendet. Bleib sicher im Netz! 🔐",
             options: []
         },
         error_node: {
             speaker: "System",
-            text: "Hoppla, hier ist etwas schiefgelaufen. Lade die Seite neu.",
+            text: "Ups, da lief was schief. Bitte Seite neu laden.",
             options: []
         }
     };
